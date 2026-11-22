@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>kryptone — locked</title>
+<style>
+  * { box-sizing:border-box; }
+  body { margin:0; min-height:100vh; display:grid; place-items:center;
+    background:radial-gradient(circle at 30% 20%,#13221a,#080b0a 70%);
+    color:#d7e3dc; font:14px/1.5 ui-monospace,Menlo,Consolas,monospace; }
+  .card { width:min(360px,92vw); background:#101714; border:1px solid #243029;
+    border-radius:16px; padding:28px 24px; box-shadow:0 30px 80px -30px #000; }
+  h1 { margin:0 0 4px; font-size:18px; letter-spacing:.22em; color:#a3e635; text-transform:uppercase; }
+  p { margin:0 0 22px; color:#7d8f85; font-size:12px; }
+  input { width:100%; background:#0b100e; border:1px solid #243029; color:#e8f0eb;
+    border-radius:10px; padding:12px; font:inherit; letter-spacing:.15em; }
+  input:focus { outline:none; border-color:#4ade80; }
+  button { width:100%; margin-top:12px; padding:12px; border:0; border-radius:10px;
+    background:#a3e635; color:#0b100e; font:inherit; font-weight:700; letter-spacing:.15em;
+    cursor:pointer; text-transform:uppercase; }
+  button:hover { background:#bdf04f; }
+  .err { color:#f87171; font-size:12px; min-height:18px; margin-top:10px; }
+</style>
+</head>
+<body>
+<form class="card" id="f">
+  <h1>kryptone</h1>
+  <p>restricted — key required</p>
+  <input id="pw" type="password" placeholder="password" autocomplete="current-password" autofocus />
+  <button type="submit">enter</button>
+  <div class="err" id="err"></div>
+</form>
+<script>
+document.getElementById('f').onsubmit = async (e) => {
+  e.preventDefault();
+  const err = document.getElementById('err');
+  err.textContent = '';
+  const r = await fetch('/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password: document.getElementById('pw').value })
+  });
+  if (r.ok) location.href = '/';
+  else err.textContent = r.status === 429 ? 'too many tries' : 'wrong';
+};
+</script>
+</body>
+</html>

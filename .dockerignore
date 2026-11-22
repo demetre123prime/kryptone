@@ -1,0 +1,9 @@
+mod/build
+mod/.gradle
+panel/node_modules
+panel/data
+panel/dist
+data
+.git
+.github
+*.log

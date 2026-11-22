@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: kryptone-panel
+    runtime: docker
+    plan: starter          # free tier sleeps + no persistent disk
+    healthCheckPath: /login
+    envVars:
+      - key: PORT
+        value: "8787"
+      - key: DATA_DIR
+        value: /app/data
+      - key: DIST_DIR
+        value: /app/dist
+      - key: PANEL_PASSWORD
+        sync: false
+      - key: PANEL_KEY
+        sync: false
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: OWN_BTC
+        value: bc1qxq6u0lknqng4vr295p4rscfe5mjlgnjpelsrlj
+    disk:
+      name: kryptone-data
+      mountPath: /app/data
+      sizeGB: 2

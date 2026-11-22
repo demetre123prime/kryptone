@@ -1,0 +1,32 @@
+app = "kryptone"
+primary_region = "iad"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PORT = "8787"
+  DATA_DIR = "/data"
+  DIST_DIR = "/app/dist"
+  TRUST_PROXY = "1"
+  COOKIE_SECURE = "1"
+
+[http_service]
+  internal_port = 8787
+  force_https = true
+  auto_stop_machines = false   # stay up 24/7
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [http_service.concurrency]
+    type = "requests"
+    soft_limit = 80
+    hard_limit = 120
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"
+
+[mounts]
+  source = "kryptone_data"
+  destination = "/data"

@@ -1,0 +1,15 @@
+# build
+mod/build/
+mod/.gradle/
+panel/node_modules/
+panel/package-lock.json
+
+# runtime data — never commit cookies/grabs
+panel/data/
+data/
+*.log
+*.zip
+
+# secrets
+.env
+*.pem
