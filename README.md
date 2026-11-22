@@ -49,6 +49,9 @@ cd mod
 ./gradlew build          # Windows: .\gradlew.bat build
 ```
 
+Loom 1.19 needs a **Java 25** build JVM; the mod targets Java 21, which is what
+Minecraft runs. CI uses Temurin 25 for that reason.
+
 Copy `mod/build/libs/kryptone-1.0.0.jar` into `panel/dist/` so `/dl` can hand it
 out and track who took it. (Already copied in this workspace.)
 
